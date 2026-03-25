@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Property Lookup</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; background: #fff; }
+    #loading { padding: 16px; text-align: center; color: #888; font-size: 14px; }
+    #message { padding: 16px; text-align: center; color: #888; font-size: 14px; display: none; }
+    #error { padding: 16px; text-align: center; color: #cc0000; font-size: 13px; display: none; }
+    iframe { width: 100%; height: 650px; border: none; display: none; }
+  </style>
+</head>
+<body>
+  <div id="loading">Loading property lookup...</div>
+  <div id="message">No Property Lookup ID found on this record.</div>
+  <div id="error"></div>
+  <iframe id="property-frame"></iframe>
+
+  <script src="https://live.zwidgets.com/js-sdk/1.0.5/ZohoEmbededAppSDK.min.js"></script>
+  <script>
+    ZOHO.embeddedApp.on("PageLoad", function(data) {
+      document.getElementById("loading").style.display = "none";
+
+      try {
+        ZOHO.CRM.API.getRecord({
+          Entity: data.Entity,
+          RecordID: data.EntityId
+        }).then(function(response) {
+          if (response && response.data && response.data.length > 0) {
+            var record = response.data[0];
+            var lookupID = record["Property_Lookup_ID"];
+
+            if (lookupID && lookupID.toString().trim() !== "") {
+              var url = "https://veritas-lookup.realtag.com/Property/" + lookupID.toString().trim();
+              var frame = document.getElementById("property-frame");
+              frame.src = url;
+              frame.style.display = "block";
+            } else {
+              document.getElementById("message").style.display = "block";
+            }
+          } else {
+            document.getElementById("message").style.display = "block";
+          }
+        }).catch(function(err) {
+          document.getElementById("error").textContent = "Error loading record: " + JSON.stringify(err);
+          document.getElementById("error").style.display = "block";
+        });
+      } catch(e) {
+        document.getElementById("error").textContent = "Error: " + e.message;
+        document.getElementById("error").style.display = "block";
+      }
+    });
+
+    ZOHO.embeddedApp.init();
+  </script>
+</body>
+</html>
