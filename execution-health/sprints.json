@@ -1,0 +1,7 @@
+[
+ {"key":"PRC","name":"CRM — Sprint 54","window":"Jul 21 – Jul 27","len":7,"daysLeft":6,"done":2,"prog":8,"todo":13,"committed":37.5,"donePts":5},
+ {"key":"PP","name":"CAM Integration","window":"Jul 20 – Jul 24","len":5,"daysLeft":3,"done":2,"prog":15,"todo":34,"committed":36.5,"donePts":0},
+ {"key":"MA","name":"MA Sprint 12","window":"Jul 21 – Jul 28","len":7,"daysLeft":7,"done":2,"prog":6,"todo":10,"committed":72,"donePts":2},
+ {"key":"LEG","name":"LEG Sprint 4","window":"Jul 21 – Jul 28","len":7,"daysLeft":7,"done":0,"prog":9,"todo":8,"committed":107,"donePts":0},
+ {"key":"REV","name":"REV Sprint 7","window":"Jul 21 – Jul 28","len":7,"daysLeft":7,"done":0,"prog":5,"todo":5,"committed":50,"donePts":0}
+]
