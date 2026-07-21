@@ -1,0 +1,721 @@
+<title>Daily Delivery Report — MakAnalytics</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f1f3f7;
+    --border: #e5e8ef;
+    --border-strong: #d5dae4;
+    --ink: #14171d;
+    --text: #2b303a;
+    --muted: #6b7280;
+    --faint: #9aa1af;
+    --accent: #2946cc;
+    --accent-soft: #eaeeff;
+    --done: #1c9d6b;
+    --done-soft: #e2f4ec;
+    --prog: #c1841a;
+    --prog-soft: #f8efdb;
+    --todo: #aeb6c4;
+    --todo-soft: #eef0f4;
+    --crit: #cf3c33;
+    --crit-soft: #fbe9e7;
+    --shadow: 0 1px 2px rgba(20,23,29,.04), 0 1px 3px rgba(20,23,29,.06);
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Menlo", "Consolas", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d0f13;
+      --surface: #15181f;
+      --surface-2: #1a1e27;
+      --border: #262b36;
+      --border-strong: #333a48;
+      --ink: #eef0f5;
+      --text: #d3d7e0;
+      --muted: #949bab;
+      --faint: #6a7180;
+      --accent: #7d90f6;
+      --accent-soft: #1c2440;
+      --done: #35c98d;
+      --done-soft: #14312a;
+      --prog: #e0a53f;
+      --prog-soft: #33280f;
+      --todo: #5a6273;
+      --todo-soft: #222834;
+      --crit: #f0685e;
+      --crit-soft: #331815;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f6f7f9; --surface: #ffffff; --surface-2: #f1f3f7; --border: #e5e8ef;
+    --border-strong: #d5dae4; --ink: #14171d; --text: #2b303a; --muted: #6b7280;
+    --faint: #9aa1af; --accent: #2946cc; --accent-soft: #eaeeff;
+    --done: #1c9d6b; --done-soft: #e2f4ec; --prog: #c1841a; --prog-soft: #f8efdb;
+    --todo: #aeb6c4; --todo-soft: #eef0f4; --crit: #cf3c33; --crit-soft: #fbe9e7;
+    --shadow: 0 1px 2px rgba(20,23,29,.04), 0 1px 3px rgba(20,23,29,.06);
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d0f13; --surface: #15181f; --surface-2: #1a1e27; --border: #262b36;
+    --border-strong: #333a48; --ink: #eef0f5; --text: #d3d7e0; --muted: #949bab;
+    --faint: #6a7180; --accent: #7d90f6; --accent-soft: #1c2440;
+    --done: #35c98d; --done-soft: #14312a; --prog: #e0a53f; --prog-soft: #33280f;
+    --todo: #5a6273; --todo-soft: #222834; --crit: #f0685e; --crit-soft: #331815;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 28px 72px;
+  }
+
+  /* ---------- Header ---------- */
+  header { margin-bottom: 34px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin: 0 0 10px;
+  }
+  h1 {
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.08;
+    letter-spacing: -.02em;
+    color: var(--ink);
+    margin: 0 0 12px;
+    font-weight: 680;
+    text-wrap: balance;
+  }
+  .sub {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 16px;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+  .sub .day { color: var(--text); font-weight: 600; }
+  .sub .dot { color: var(--faint); }
+  .snapshot {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--faint);
+  }
+
+  /* ---------- Section shells ---------- */
+  section { margin-top: 34px; }
+  .sec-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+  .sec-title {
+    font-size: 13px;
+    font-weight: 650;
+    letter-spacing: -.01em;
+    color: var(--ink);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+  }
+  .sec-note { font-family: var(--mono); font-size: 11.5px; color: var(--faint); }
+
+  /* ---------- KPI row ---------- */
+  .kpis {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 16px 15px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+  }
+  .kpi .k-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 550;
+  }
+  .kpi .k-num {
+    font-family: var(--mono);
+    font-size: 30px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+  }
+  .kpi .k-num.accent { color: var(--accent); }
+  .kpi .k-sub { font-size: 11.5px; color: var(--faint); }
+  .kpi .k-sub b { color: var(--done); font-weight: 600; }
+
+  /* ---------- Sprint health ---------- */
+  .sprints {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .sprint-row {
+    display: grid;
+    grid-template-columns: 210px 1fr 128px;
+    gap: 20px;
+    align-items: center;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+  }
+  .sprint-row:first-child { border-top: none; }
+  .sprint-id { min-width: 0; }
+  .sprint-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sprint-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .pkey {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .04em;
+    color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 6px;
+    border-radius: 5px;
+  }
+  .bar {
+    height: 12px;
+    border-radius: 6px;
+    background: var(--todo-soft);
+    display: flex;
+    overflow: hidden;
+  }
+  .bar span { display: block; height: 100%; }
+  .bar .s-done { background: var(--done); }
+  .bar .s-prog { background: var(--prog); }
+  .bar .s-todo { background: var(--todo); }
+  .bar-legend {
+    display: flex;
+    gap: 14px;
+    margin-top: 7px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .bar-legend i {
+    width: 8px; height: 8px; border-radius: 2px; display: inline-block;
+    margin-right: 5px; vertical-align: baseline;
+  }
+  .i-done { background: var(--done); }
+  .i-prog { background: var(--prog); }
+  .i-todo { background: var(--todo); }
+  .sprint-pts { text-align: right; }
+  .sprint-pts .big {
+    font-family: var(--mono);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .sprint-pts .lbl { font-size: 11px; color: var(--faint); }
+  .days { color: var(--faint); }
+  .days.tight { color: var(--crit); font-weight: 600; }
+
+  /* ---------- Two column ---------- */
+  .cols {
+    display: grid;
+    grid-template-columns: 1.55fr 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px 20px;
+  }
+  .panel + .panel { margin-top: 20px; }
+
+  /* Shipped feed */
+  .grp { margin-top: 16px; }
+  .grp:first-of-type { margin-top: 4px; }
+  .grp-head {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin-bottom: 8px;
+    padding-bottom: 7px;
+    border-bottom: 1px dashed var(--border-strong);
+  }
+  .grp-head .name { font-size: 12.5px; color: var(--muted); font-weight: 550; }
+  .grp-head .count { font-family: var(--mono); font-size: 11px; color: var(--faint); margin-left: auto; }
+  .ship {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 12px;
+    align-items: baseline;
+    padding: 7px 0;
+  }
+  .ship .key {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 550;
+    white-space: nowrap;
+  }
+  a.key {
+    text-decoration: none;
+    border-radius: 4px;
+    transition: color .12s ease;
+  }
+  a.key:hover { text-decoration: underline; text-underline-offset: 2px; }
+  a.key:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .ship .title { font-size: 13.5px; color: var(--text); line-height: 1.4; }
+  .ship .title .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-right: 7px;
+    vertical-align: middle;
+    font-weight: 600;
+  }
+  .tag.bug { background: var(--crit-soft); color: var(--crit); }
+  .tag.crit { background: var(--crit); color: #fff; }
+  .tag.feat { background: var(--done-soft); color: var(--done); }
+  .tag.sub {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border-strong);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .subnote { color: var(--faint); }
+  .reconcile {
+    margin-top: 16px;
+    padding-top: 13px;
+    border-top: 1px solid var(--border);
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--muted);
+  }
+  .reconcile .chip {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border-strong);
+    color: var(--muted);
+    vertical-align: middle;
+  }
+  .ship .pts {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .ship .who { font-size: 11.5px; color: var(--faint); }
+
+  /* Movers */
+  .mover {
+    display: grid;
+    grid-template-columns: 1fr 40px;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+  }
+  .mover .m-name { font-size: 13px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mover .m-bar-track { grid-column: 1 / -1; height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-top: -2px; }
+  .mover .m-bar { height: 100%; background: var(--accent); border-radius: 3px; }
+  .mover .m-val { font-family: var(--mono); font-size: 12px; color: var(--ink); text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .mover .m-val small { color: var(--faint); font-weight: 400; }
+
+  /* Opened list */
+  .opened { display: flex; flex-direction: column; gap: 2px; }
+  .op {
+    display: grid;
+    grid-template-columns: 64px 1fr;
+    gap: 12px;
+    align-items: baseline;
+    padding: 6px 0;
+    border-top: 1px solid var(--border);
+  }
+  .op:first-child { border-top: none; }
+  .op .key { font-family: var(--mono); font-size: 12px; color: var(--muted); font-weight: 550; }
+  .op .title { font-size: 12.5px; color: var(--text); }
+
+  /* Project strip */
+  .proj-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; }
+  .proj {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 14px 13px;
+    box-shadow: var(--shadow);
+  }
+  .proj .p-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+  .proj .p-name { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .proj .p-stats { display: flex; flex-direction: column; gap: 5px; }
+  .proj .p-line { display: flex; align-items: baseline; justify-content: space-between; font-size: 11.5px; color: var(--muted); }
+  .proj .p-line b { font-family: var(--mono); font-size: 14px; color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .proj .p-line b.good { color: var(--done); }
+
+  footer {
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    justify-content: space-between;
+  }
+
+  @media (max-width: 860px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .cols { grid-template-columns: 1fr; }
+    .proj-grid { grid-template-columns: repeat(3, 1fr); }
+    .sprint-row { grid-template-columns: 1fr; gap: 12px; }
+    .sprint-pts { text-align: left; }
+  }
+  @media (max-width: 480px) {
+    .kpis { grid-template-columns: repeat(2, 1fr); }
+    .proj-grid { grid-template-columns: repeat(2, 1fr); }
+    .ship { grid-template-columns: 56px 1fr; }
+    .ship .who { display: none; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .bar span, .mover .m-bar { animation: grow .7s cubic-bezier(.2,.7,.2,1) both; }
+    @keyframes grow { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); } }
+  }
+  .empty-state { padding: 16px 2px; font-size: 13px; color: var(--faint); font-style: italic; text-align: center; }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">MakAnalytics · Engineering Delivery</p>
+    <h1>What shipped yesterday</h1>
+    <div class="sub">
+      <span class="day">Monday, July 20, 2026</span>
+      <span class="dot">·</span>
+      <span>6 active projects — ES, PP, PRC, REV, LEG, MA</span>
+    </div>
+    <div class="snapshot" style="margin-top:8px">Static snapshot · generated Jul 21, 2026 from Jira · re-run to refresh</div>
+  </header>
+
+  <section aria-label="Headline metrics">
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section aria-label="Sprint health">
+    <div class="sec-head">
+      <h2 class="sec-title">Active sprint health</h2>
+      <span class="sec-note">story-level rollup · sub-task points folded into unestimated parents · Won't-Do excluded</span>
+    </div>
+    <div class="sprints" id="sprints"></div>
+  </section>
+
+  <section aria-label="Delivery detail">
+    <div class="cols">
+      <div>
+        <div class="sec-head">
+          <h2 class="sec-title">Shipped yesterday</h2>
+          <span class="sec-note">25 resolved · 74.25 pts</span>
+        </div>
+        <div class="panel" id="shipped"></div>
+      </div>
+      <div>
+        <div class="sec-head">
+          <h2 class="sec-title">Top movers</h2>
+          <span class="sec-note">issues resolved</span>
+        </div>
+        <div class="panel" id="movers"></div>
+
+        <div class="sec-head" style="margin-top:20px">
+          <h2 class="sec-title">Opened yesterday</h2>
+          <span class="sec-note">23 new</span>
+        </div>
+        <div class="panel" id="opened"></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="By project">
+    <div class="sec-head">
+      <h2 class="sec-title">By project</h2>
+      <span class="sec-note">yesterday's flow</span>
+    </div>
+    <div class="proj-grid" id="projects"></div>
+  </section>
+
+  <footer>
+    <span>Source: makanalytics.atlassian.net · JQL window 2026-07-20 00:00 → 2026-07-21 00:00 (America/Chicago)</span>
+    <span>99 items touched · 9 contributors</span>
+  </footer>
+</div>
+
+<script>
+  const kpis = [
+    { label: "Shipped", num: "25", accent: true, sub: "issues resolved" },
+    { label: "Points closed", num: "74.25", sub: "story points" },
+    { label: "Opened", num: "23", sub: "25 shipped · backlog −2" },
+    { label: "Contributors", num: "9", sub: "active engineers" },
+    { label: "Items touched", num: "99", sub: "across 6 projects" },
+  ];
+
+  // done / prog / todo are ISSUE counts; committed & donePts are story points
+  const sprints = [
+    { key: "PRC", name: "PR-CRM · Sprint 54",        window: "Jul 21 – Jul 27", daysLeft: 6, done: 2, prog: 8,  todo: 13, committed: 37.5, donePts: 5, subtasks: 2 },
+    { key: "PP",  name: "CAM Integration",           window: "Jul 20 – Jul 24", daysLeft: 3, done: 2, prog: 15, todo: 34, committed: 36.5, donePts: 0, subtasks: 14 },
+    { key: "MA",  name: "Muenster · Sprint 12",      window: "Jul 21 – Jul 28", daysLeft: 7, done: 2, prog: 5,  todo: 11, committed: 72, donePts: 2, subtasks: 0 },
+    { key: "LEG", name: "Legions · Sprint 3",        window: "Jul 15 – Jul 20", daysLeft: 0, done: 0, prog: 7,  todo: 1,  committed: 60, donePts: 0, subtasks: 0 },
+    { key: "REV", name: "Rev-Mgmt · Sprint 6",       window: "Jul 16 – Jul 22", daysLeft: 1, done: 2, prog: 3,  todo: 5,  committed: 50, donePts: 8, subtasks: 0 },
+  ];
+
+  const shipped = [
+    { grp: "PRC — Priority Roofing CRM", count: "11 · 60 pts", items: [
+      { key: "PRC-2247", tag: "feat", title: "CRM External Hub — implementation (whole feature shipped)", pts: "30", who: "Sangamesh Biradar" },
+      { key: "PRC-2264", tag: "", sub: true, title: "External Hub — schema + Links/Categories CRUD APIs", pts: "6", who: "Sangamesh Biradar" },
+      { key: "PRC-2266", tag: "", sub: true, title: "External Hub — Branch Admin management", pts: "6", who: "Sangamesh Biradar" },
+      { key: "PRC-2255", tag: "", sub: true, title: "External Hub — Hub page read experience", pts: "4", who: "Sangamesh Biradar" },
+      { key: "PRC-2256", tag: "", sub: true, title: "External Hub — app launcher (header + mobile)", pts: "4", who: "Sangamesh Biradar" },
+      { key: "PRC-2267", tag: "", sub: true, title: "External Hub — Manage Categories dialog", pts: "4", who: "Sangamesh Biradar" },
+      { key: "PRC-2268", tag: "", sub: true, title: "External Hub — rollout/QA: flag, env, migrations", pts: "4", who: "Sangamesh Biradar" },
+      { key: "PRC-2265", tag: "", sub: true, title: "External Hub — icon upload pipeline", pts: "2", who: "Sangamesh Biradar" },
+      { key: "PRC-2188", tag: "", title: "External Links Hub for CRM (Figma UI)", pts: "—", who: "Abhijith M D" },
+      { key: "PRC-2295", tag: "bug", title: "iOS Safari crash (“A problem repeatedly occurred”)", pts: "—", who: "jasonwhitsell" },
+      { key: "PRC-2296", tag: "bug", title: "QuickBooks error for Los Angeles job", pts: "—", who: "jasonwhitsell" },
+    ]},
+    { grp: "PP — Priority Proposal", count: "13 · 11.25 pts", items: [
+      { key: "PP-354", tag: "bug", title: "CC email not received on proposal send", pts: "3", who: "robinrajadurai" },
+      { key: "PP-361", tag: "bug", title: "Apply spacing formatting in proposal preview", pts: "3", who: "robinrajadurai" },
+      { key: "PP-340", tag: "", title: "Catalog — filter for quick-access search-bar tags", pts: "2", who: "robinrajadurai" },
+      { key: "PP-326", tag: "", title: "Dashboard — show full property address on hover", pts: "2", who: "robinrajadurai" },
+      { key: "PP-330", tag: "", title: "Damage Assessment — relocate Drop Photos area", pts: "1", who: "robinrajadurai" },
+      { key: "PP-328", tag: "", title: "Dashboard — center the Action column header", pts: "0.25", who: "robinrajadurai" },
+      { key: "PP-433", tag: "bug", title: "History timeline shows incorrect attribution (QA 7/13)", pts: "—", who: "robinrajadurai" },
+      { key: "PP-430", tag: "bug", title: "Settings tab label mismatch (QA 7/13)", pts: "—", who: "robinrajadurai" },
+      { key: "PP-428", tag: "bug", title: "Assessment ownership leak (QA 7/13)", pts: "—", who: "robinrajadurai" },
+      { key: "PP-427", tag: "bug", title: "Assessment total goes stale after edit (QA 7/13)", pts: "—", who: "robinrajadurai" },
+      { key: "PP-385", tag: "bug", title: "AI assistant wrote wrong date on new roof proposal", pts: "—", who: "robinrajadurai" },
+      { key: "PP-423", tag: "bug", title: "Add categories for estimates", pts: "—", who: "robinrajadurai" },
+      { key: "PP-424", tag: "feat", title: "Use AI prompt to generate proposal (UI request)", pts: "—", who: "Abhijith M D" },
+    ]},
+    { grp: "MA — Muenster Automation", count: "1 · 3 pts", items: [
+      { key: "MA-137", tag: "feat", title: "[Exception] Missing analyte value — define & implement dropdown", pts: "3", who: "rahulg" },
+    ]},
+  ];
+
+  const movers = [
+    { name: "robinrajadurai", val: 12 },
+    { name: "Sangamesh Biradar", val: 8 },
+    { name: "jasonwhitsell", val: 2 },
+    { name: "Abhijith M D", val: 2 },
+    { name: "rahulg", val: 1 },
+  ];
+
+  const opened = [
+    { key: "ES-570", title: "Clarify duplicate office selection" },
+    { key: "ES-569", title: "Add missing quote-tracking fields and categories" },
+    { key: "ES-568", title: "Show Referred By within the quote and project" },
+    { key: "ES-567", title: "Display and calculate applied discounts correctly" },
+    { key: "ES-566", title: "Allow percentage discounts" },
+    { key: "ES-565", title: "Reorganize and simplify the Legal tab" },
+    { key: "ES-564", title: "Support abstract legal descriptions & A-number formatting" },
+    { key: "ES-563", title: "Pull saved legal descriptions onto invoices" },
+    { key: "ES-562", title: "Differentiate easement line items" },
+    { key: "ES-561", title: "Use the full Construction Staking service name" },
+    { key: "ES-560", title: "Add hours or quantity to Time & Materials items" },
+    { key: "ES-559", title: "Disable emails in prod" },
+    { key: "PRC-2313", title: "St Louis branch — user login error (investigation)" },
+    { key: "PRC-2312", title: "Create Prosper branch location (duplicate Shermans)" },
+    { key: "PRC-2311", title: "Installation / Work Start calendar event" },
+    { key: "PRC-2310", title: "Requests auto-update question" },
+    { key: "PRC-2309", title: "Audit-materials page — color for shingles" },
+    { key: "PRC-2308", title: "Requests — simplify the redundant Summary field" },
+    { key: "PRC-2306", title: "OKC feedback: Priority CAM" },
+    { key: "PP-454", title: "“Designer Roofing Proposal” template shows hardcoded date" },
+    { key: "PP-453", title: "Manual cleanup of QA test assessments before go-live" },
+    { key: "PP-451", title: "“Designer Roofing Proposal” template hardcoded date (dup)" },
+    { key: "PP-449", title: "Coordinate-based drag-drop upload silently fails" },
+  ];
+
+  const projects = [
+    { key: "PRC", name: "Priority Roofing", touched: 44, ship: 11, open: 7, pts: 60 },
+    { key: "PP",  name: "Priority Proposal", touched: 27, ship: 13, open: 4, pts: 11.25 },
+    { key: "ES",  name: "Eagle Survey", touched: 20, ship: 0, open: 12, pts: 0 },
+    { key: "LEG", name: "Legions", touched: 5, ship: 0, open: 0, pts: 0 },
+    { key: "REV", name: "Concierge Rev Mgmt", touched: 2, ship: 0, open: 0, pts: 0 },
+    { key: "MA",  name: "Muenster Automation", touched: 1, ship: 1, open: 0, pts: 3 },
+  ];
+
+  // ---- render ----
+  const JIRA = "https://makanalytics.atlassian.net/browse/";
+  const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
+  const keyLink = (k) => {
+    const a = el("a", "key", k);
+    a.href = JIRA + k;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.title = "Open " + k + " in Jira";
+    return a;
+  };
+
+  document.getElementById("kpis").append(...kpis.map(k => {
+    const d = el("div", "kpi");
+    d.append(el("span", "k-label", k.label));
+    d.append(el("span", "k-num" + (k.accent ? " accent" : ""), k.num));
+    d.append(el("span", "k-sub", k.sub));
+    return d;
+  }));
+
+  const sc = document.getElementById("sprints");
+  sprints.forEach(s => {
+    const total = s.done + s.prog + s.todo;
+    const pct = n => (total ? (n / total * 100) : 0).toFixed(1) + "%";
+    const row = el("div", "sprint-row");
+    const id = el("div", "sprint-id");
+    id.append(el("div", "sprint-name", s.name));
+    const meta = el("div", "sprint-meta");
+    meta.append(el("span", "pkey", s.key));
+    meta.append(el("span", null, s.window));
+    id.append(meta);
+
+    const mid = el("div", "sprint-mid");
+    const bar = el("div", "bar");
+    bar.innerHTML =
+      `<span class="s-done" style="width:${pct(s.done)}"></span>` +
+      `<span class="s-prog" style="width:${pct(s.prog)}"></span>` +
+      `<span class="s-todo" style="width:${pct(s.todo)}"></span>`;
+    mid.append(bar);
+    const lg = el("div", "bar-legend");
+    lg.innerHTML =
+      `<span><i class="i-done"></i>${s.done} done</span>` +
+      `<span><i class="i-prog"></i>${s.prog} in progress</span>` +
+      `<span><i class="i-todo"></i>${s.todo} to do</span>` +
+      (s.subtasks ? `<span class="subnote">+${s.subtasks} sub-tasks (nested)</span>` : "");
+    mid.append(lg);
+
+    const pts = el("div", "sprint-pts");
+    pts.append(el("div", "big", s.committed + " pts"));
+    const dl = s.daysLeft <= 1 ? "days tight" : "days";
+    pts.append(el("div", "lbl", `${s.donePts} done · <span class="${dl}">${s.daysLeft}d left</span>`));
+
+    row.append(id, mid, pts);
+    sc.append(row);
+  });
+
+  const shipC = document.getElementById("shipped");
+  shipped.forEach(g => {
+    const grp = el("div", "grp");
+    const gh = el("div", "grp-head");
+    gh.append(el("span", "name", g.grp));
+    gh.append(el("span", "count", g.count));
+    grp.append(gh);
+    g.items.forEach(it => {
+      const r = el("div", "ship");
+      r.append(keyLink(it.key));
+      const tag = it.tag ? `<span class="tag ${it.tag}">${it.tag === "feat" ? "feat" : it.tag === "crit" ? "critical" : "bug"}</span>` : "";
+      const subTag = it.sub ? `<span class="tag sub" title="Sub-task — counts as shipped work, but excluded from sprint-health points">↳ sub-task</span>` : "";
+      r.append(el("span", "title", tag + subTag + it.title));
+      r.append(el("span", "pts", it.pts === "—" ? "—" : it.pts + " pt"));
+      grp.append(r);
+    });
+    shipC.append(grp);
+  });
+  if (!shipped.length) shipC.append(el("div", "empty-state", "No issues resolved on this date — a quiet weekend."));
+  else shipC.append(el("div", "reconcile",
+    `<span class="chip">↳ sub-task</span> items count here as work shipped. In <b>Sprint&nbsp;health</b>, sub-task points are folded into their parent only where the parent has no estimate — a story-level rollup, so nothing is double-counted; the bar still counts parent work items. Cancelled <b>Won't-Do</b> items count in neither. So a completed sub-task can appear here without moving a sprint's "done" total.`));
+
+  const mvC = document.getElementById("movers");
+  const mvMax = Math.max(...movers.map(m => m.val));
+  movers.forEach(m => {
+    const r = el("div", "mover");
+    r.append(el("div", "m-name", m.name));
+    r.append(el("div", "m-val", `${m.val}<small> issue${m.val === 1 ? "" : "s"}</small>`));
+    const track = el("div", "m-bar-track");
+    const bar = el("div", "m-bar");
+    bar.style.width = (m.val / mvMax * 100) + "%";
+    track.append(bar);
+    r.append(track);
+    mvC.append(r);
+  });
+  if (!movers.length) mvC.append(el("div", "empty-state", "No contributor activity."));
+
+  const opC = document.getElementById("opened");
+  const opWrap = el("div", "opened");
+  opened.forEach(o => {
+    const r = el("div", "op");
+    r.append(keyLink(o.key));
+    r.append(el("span", "title", o.title));
+    opWrap.append(r);
+  });
+  if (!opened.length) opWrap.append(el("div", "empty-state", "Nothing opened."));
+  opC.append(opWrap);
+
+  const pjC = document.getElementById("projects");
+  projects.forEach(p => {
+    const d = el("div", "proj");
+    const top = el("div", "p-top");
+    top.append(el("span", "pkey", p.key));
+    top.append(el("span", "p-name", p.name));
+    d.append(top);
+    const st = el("div", "p-stats");
+    st.append(el("div", "p-line", `<span>Shipped</span><b class="good">${p.ship}</b>`));
+    st.append(el("div", "p-line", `<span>Opened</span><b>${p.open}</b>`));
+    st.append(el("div", "p-line", `<span>Touched</span><b>${p.touched}</b>`));
+    st.append(el("div", "p-line", `<span>Points</span><b>${p.pts}</b>`));
+    d.append(st);
+    pjC.append(d);
+  });
+</script>
