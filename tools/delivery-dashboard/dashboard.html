@@ -483,7 +483,7 @@
 
         <div class="sec-head" style="margin-top:20px">
           <h2 class="sec-title">Opened yesterday</h2>
-          <span class="sec-note">23 new</span>
+          <span class="sec-note">34 new</span>
         </div>
         <div class="panel" id="opened"></div>
       </div>
@@ -500,7 +500,7 @@
 
   <footer>
     <span>Source: makanalytics.atlassian.net · JQL window 2026-07-20 00:00 → 2026-07-21 00:00 (America/Chicago)</span>
-    <span>99 items touched · 9 contributors</span>
+    <span>90 items touched · 9 contributors</span>
   </footer>
 </div>
 
@@ -508,18 +508,18 @@
   const kpis = [
     { label: "Shipped", num: "25", accent: true, sub: "issues resolved" },
     { label: "Points closed", num: "74.25", sub: "story points" },
-    { label: "Opened", num: "23", sub: "25 shipped · backlog −2" },
+    { label: "Opened", num: "34", sub: "25 shipped · backlog +9" },
     { label: "Contributors", num: "9", sub: "active engineers" },
-    { label: "Items touched", num: "99", sub: "across 6 projects" },
+    { label: "Items touched", num: "90", sub: "across 6 projects" },
   ];
 
   // done / prog / todo are ISSUE counts; committed & donePts are story points
   const sprints = [
-    { key: "PRC", name: "PR-CRM · Sprint 54",        window: "Jul 21 – Jul 27", daysLeft: 6, done: 2, prog: 8,  todo: 13, committed: 37.5, donePts: 5, subtasks: 2 },
-    { key: "PP",  name: "CAM Integration",           window: "Jul 20 – Jul 24", daysLeft: 3, done: 2, prog: 15, todo: 34, committed: 36.5, donePts: 0, subtasks: 14 },
-    { key: "MA",  name: "Muenster · Sprint 12",      window: "Jul 21 – Jul 28", daysLeft: 7, done: 2, prog: 5,  todo: 11, committed: 72, donePts: 2, subtasks: 0 },
-    { key: "LEG", name: "Legions · Sprint 3",        window: "Jul 15 – Jul 20", daysLeft: 0, done: 0, prog: 7,  todo: 1,  committed: 60, donePts: 0, subtasks: 0 },
-    { key: "REV", name: "Rev-Mgmt · Sprint 6",       window: "Jul 16 – Jul 22", daysLeft: 1, done: 2, prog: 3,  todo: 5,  committed: 50, donePts: 8, subtasks: 0 },
+    { key: "PRC", name: "PRC - CRM - Sprint 54",     window: "Jul 21 – Jul 27", daysLeft: 6, done: 2, prog: 8,  todo: 13, committed: 37.5, donePts: 5, subtasks: 2 },
+    { key: "PP",  name: "PP - CAM Integration",      window: "Jul 20 – Jul 24", daysLeft: 3, done: 2, prog: 15, todo: 34, committed: 36.5, donePts: 0, subtasks: 14 },
+    { key: "MA",  name: "MA Sprint 12",              window: "Jul 21 – Jul 28", daysLeft: 7, done: 2, prog: 6,  todo: 10, committed: 72, donePts: 2, subtasks: 0 },
+    { key: "LEG", name: "LEG Sprint 4",              window: "Jul 21 – Jul 28", daysLeft: 7, done: 0, prog: 9,  todo: 8,  committed: 107, donePts: 0, subtasks: 0 },
+    { key: "REV", name: "REV Sprint 7",              window: "Jul 21 – Jul 28", daysLeft: 7, done: 0, prog: 5,  todo: 5,  committed: 50, donePts: 0, subtasks: 0 },
   ];
 
   const shipped = [
@@ -577,26 +577,37 @@
     { key: "ES-561", title: "Use the full Construction Staking service name" },
     { key: "ES-560", title: "Add hours or quantity to Time & Materials items" },
     { key: "ES-559", title: "Disable emails in prod" },
-    { key: "PRC-2313", title: "St Louis branch — user login error (investigation)" },
-    { key: "PRC-2312", title: "Create Prosper branch location (duplicate Shermans)" },
+    { key: "PRC-2313", title: "St Louis branch — user login error (Rick Pinkowski, investigation)" },
+    { key: "PRC-2312", title: "Create Prosper branch location (can duplicate Shermans)" },
     { key: "PRC-2311", title: "Installation / Work Start calendar event" },
     { key: "PRC-2310", title: "Requests auto-update question" },
-    { key: "PRC-2309", title: "Audit-materials page — color for shingles" },
-    { key: "PRC-2308", title: "Requests — simplify the redundant Summary field" },
+    { key: "PRC-2309", title: "Audit-materials page — color for shingles, caulk, drip edge" },
+    { key: "PRC-2308", title: "Requests — make the redundant Summary field not required" },
+    { key: "PRC-2307", title: "Material Order — year field cuts off after 3 digits" },
     { key: "PRC-2306", title: "OKC feedback: Priority CAM" },
-    { key: "PP-454", title: "“Designer Roofing Proposal” template shows hardcoded date" },
+    { key: "PRC-2305", title: "Add to Final Commission Checklist" },
+    { key: "PRC-2304", title: "Auto-drafted email templates" },
+    { key: "PRC-2303", title: "Commission Draw window — show calculated Total Invoice Amount" },
+    { key: "PP-457", title: "“AI” toolbar button in Proposal Editor has no label or tooltip" },
+    { key: "PP-456", title: "Dashboard tab labels inconsistently pluralized" },
+    { key: "PP-455", title: "Typo in header tagline: “Damage Assements” → “Damage Assessments”" },
+    { key: "PP-454", title: "“Designer Roofing Proposal” template shows hardcoded date & rep" },
     { key: "PP-453", title: "Manual cleanup of QA test assessments before go-live" },
-    { key: "PP-451", title: "“Designer Roofing Proposal” template hardcoded date (dup)" },
+    { key: "PP-452", title: "Verify Sales Rep edit/delete scope on others’ templates & catalog" },
+    { key: "PP-451", title: "“Designer Roofing Proposal” template hardcoded date & rep (dup)" },
+    { key: "PP-450", title: "Share Link tamper/validation issue still present" },
     { key: "PP-449", title: "Coordinate-based drag-drop upload silently fails" },
+    { key: "REV-71", title: "Set up SSO in dev env with Mak Microsoft account (testing)" },
+    { key: "MA-187", title: "FOSS polling investigation" },
   ];
 
   const projects = [
-    { key: "PRC", name: "Priority Roofing", touched: 44, ship: 11, open: 7, pts: 60 },
-    { key: "PP",  name: "Priority Proposal", touched: 27, ship: 13, open: 4, pts: 11.25 },
-    { key: "ES",  name: "Eagle Survey", touched: 20, ship: 0, open: 12, pts: 0 },
-    { key: "LEG", name: "Legions", touched: 5, ship: 0, open: 0, pts: 0 },
-    { key: "REV", name: "Concierge Rev Mgmt", touched: 2, ship: 0, open: 0, pts: 0 },
-    { key: "MA",  name: "Muenster Automation", touched: 1, ship: 1, open: 0, pts: 3 },
+    { key: "PRC", name: "Priority Roofing", touched: 44, ship: 11, open: 11, pts: 60 },
+    { key: "PP",  name: "Priority Proposal", touched: 27, ship: 13, open: 9, pts: 11.25 },
+    { key: "ES",  name: "Eagle Survey", touched: 18, ship: 0, open: 12, pts: 0 },
+    { key: "LEG", name: "Legions", touched: 0, ship: 0, open: 0, pts: 0 },
+    { key: "REV", name: "Concierge Rev Mgmt", touched: 0, ship: 0, open: 1, pts: 0 },
+    { key: "MA",  name: "Muenster Automation", touched: 1, ship: 1, open: 1, pts: 3 },
   ];
 
   // ---- render ----
