@@ -130,7 +130,11 @@ data = {
 
 json.dump(data, open(os.path.join(HERE, "report_data.json"), "w"), indent=1)
 tpl = open(os.path.join(HERE, "template.html")).read()
-out = tpl.replace("__DATA__", json.dumps(data))
+out = (tpl.replace("__DATA__", json.dumps(data))
+          .replace("__GENERATED_LABEL__", TODAY.strftime("%b %-d, %Y"))
+          .replace("__WINDOW_LABEL__", f"{WEEKS[0]} → {TODAY.isoformat()}")
+          .replace("__HIST_COUNT__", str(len(hist)))
+          .replace("__LAST_WEEK_LABEL__", d(WEEKS[-1]).strftime("%b %-d, %Y")))
 open(os.path.join(HERE, "execution-health.html"), "w").write(out)
 print(f"built execution-health.html  | today={TODAY} hist={len(hist)} wip={len(wip)} bugs={len(bugs)} "
       f"net8wk={sum(sum(cre[w].values()) for w in WEEKS)-sum(sum(res[w].values()) for w in WEEKS):+d}")
