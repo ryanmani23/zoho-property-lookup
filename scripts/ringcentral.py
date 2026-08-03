@@ -48,16 +48,30 @@ def find_extension_by_email(email):
     return None
 
 
+def _account_id():
+    return os.environ.get("RC_ACCOUNT_ID", "528356052")
+
+
 def _pick_available_number():
-    """Find an unassigned DID in the account inventory (usageType NumberPool)."""
-    r = requests.get(f"{_base()}/restapi/v1.0/account/~/phone-number",
-                     params={"usageType": "NumberPool", "perPage": 1000},
-                     headers=_h(), timeout=30)
+    """Find an unassigned DID in inventory. The v1 list omits inventory numbers;
+    the v2 endpoint exposes them as usageType 'Inventory'."""
+    r = requests.get(f"{_base()}/restapi/v2/accounts/{_account_id()}/phone-numbers",
+                     params={"perPage": 1000}, headers=_h(), timeout=60)
     r.raise_for_status()
     for n in r.json().get("records", []):
-        if not n.get("extension"):
+        if n.get("usageType") == "Inventory" and not n.get("extension") \
+                and n.get("status") == "Normal":
             return n
     return None
+
+
+def _assign_number(number_id, ext_id):
+    """Assign an inventory number to an extension via v2 (flips it to
+    DirectNumber). The v1 PUT refuses a NumberPool->DirectNumber reassignment."""
+    r = requests.patch(f"{_base()}/restapi/v2/accounts/{_account_id()}/phone-numbers/{number_id}",
+                       json={"extension": {"id": ext_id}, "usageType": "DirectNumber"},
+                       headers=_h(), timeout=30)
+    return r.status_code < 400, r
 
 
 def create_user(first_name, last_name):
@@ -87,13 +101,12 @@ def create_user(first_name, last_name):
         raise RuntimeError(f"RC create extension {email} failed: {r.status_code} {r.text}")
     ext_id = r.json()["id"]
 
-    # Assign a number from inventory.
+    # Assign a number from inventory (v2 endpoint).
     number = _pick_available_number()
     if not number:
         return ext_id, None, "extension created; NO free number in inventory — assign manually"
-    upd = requests.put(f"{_base()}/restapi/v1.0/account/~/phone-number/{number['id']}",
-                       json={"extension": {"id": ext_id}}, headers=_h(), timeout=30)
-    if upd.status_code >= 400:
+    ok, upd = _assign_number(number["id"], ext_id)
+    if not ok:
         return ext_id, None, f"extension created; number assign failed ({upd.status_code}) — assign manually"
     return ext_id, number.get("phoneNumber"), "created + number assigned"
 
