@@ -14,7 +14,7 @@ import common
 from common import log, banner, StepResult, email_for
 import m365
 import ringcentral
-import zoho
+import zoho_one
 
 # The four new-hire loan officers from Tom's "New Hire LOs" request.
 # role "loan_officer" -> ActivTrak group YES, Zoho CRM YES.
@@ -94,18 +94,22 @@ def onboard_person(p, sku_map, bp_free_tracker):
         rows.append(StepResult(f"{first} {last}", "RingCentral", "create user + number").failed(str(e)))
         summary["status"] = "partial"
 
-    # --- 4. Zoho CRM (LO -> yes) ---
+    # --- 4. Zoho (LO -> yes). A Zoho One org rejects CRM-API user creation, so
+    # add via the Zoho One API. NOTE: org membership does NOT auto-grant the CRM
+    # app — assigning the CRM application needs a ZohoOne apps-scoped token (not
+    # on the current refresh token) or a console action; flagged as a follow-up.
     if p["role"] in ("loan_officer", "manager"):
         try:
-            zid, note = zoho.create_user(first, last)
-            summary["zoho"] = "granted"
-            rows.append(StepResult(f"{first} {last}", "Zoho CRM", "create user + CRM access").ok(note))
+            org_id = zoho_one.resolve_org_id()
+            zid, note = zoho_one.create_user(org_id, first, last)
+            summary["zoho"] = "zoho-one-created (CRM app assignment pending)"
+            rows.append(StepResult(f"{first} {last}", "Zoho One", "create org user").ok(note))
         except Exception as e:
             summary["zoho"] = "failed"
-            rows.append(StepResult(f"{first} {last}", "Zoho CRM", "create user + CRM access").failed(str(e)))
+            rows.append(StepResult(f"{first} {last}", "Zoho One", "create org user").failed(str(e)))
             summary["status"] = "partial"
     else:
-        rows.append(StepResult(f"{first} {last}", "Zoho CRM", "skip").skipped("role not LO/manager"))
+        rows.append(StepResult(f"{first} {last}", "Zoho", "skip").skipped("role not LO/manager"))
 
     return rows, summary
 
