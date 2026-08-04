@@ -19,7 +19,7 @@
       "Bash(awk *)",
       "Bash(sed *)",
       "Artifact",
-      "WebFetch(domain:claude.ai)"
+      "WebFetch(domain:claude.ai)",
       "mcp__Atlassian-Rovo__searchJiraIssuesUsingJql",
       "mcp__Atlassian-Rovo__getJiraIssue",
       "mcp__Atlassian-Rovo__getVisibleJiraProjects",
