@@ -1,0 +1,598 @@
+<title>Execution Health — MakAnalytics Engineering</title>
+<style>
+  :root{
+    color-scheme: light dark;
+    --bg:#f4f6f8; --surface:#ffffff; --surface-2:#eef1f6; --border:#e3e7ef; --border-strong:#d3d9e4;
+    --ink:#141821; --text:#2b303a; --muted:#67707f; --faint:#98a0ae;
+    --accent:#2946cc; --accent-soft:#e9edff;
+    --good:#1c9d6b; --good-soft:#e2f4ec;
+    --warn:#c0821a; --warn-soft:#f8efda;
+    --serious:#d9722a; --serious-soft:#fbeadd;
+    --crit:#cf3c33; --crit-soft:#fbe7e5;
+    --neutral:#9aa2b1; --neutral-soft:#eef0f4;
+    --created:#5b6b8c; --resolved:#1c9d6b;
+    --grid:#eceff4; --track:#eef1f6;
+    --shadow:0 1px 2px rgba(20,23,29,.04),0 1px 3px rgba(20,23,29,.06);
+    --shadow-lg:0 2px 6px rgba(20,23,29,.05),0 8px 24px rgba(20,23,29,.06);
+    --mono:ui-monospace,"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --bg:#0c0e12; --surface:#14171e; --surface-2:#1a1e27; --border:#242a35; --border-strong:#333a48;
+      --ink:#eef0f5; --text:#d2d6e0; --muted:#909aab; --faint:#68707f;
+      --accent:#8296f8; --accent-soft:#1b2340;
+      --good:#37cb8f; --good-soft:#123026;
+      --warn:#e0a53f; --warn-soft:#312611;
+      --serious:#ef9256; --serious-soft:#331f11;
+      --crit:#f2695f; --crit-soft:#331714;
+      --neutral:#5c6474; --neutral-soft:#20252f;
+      --created:#93a3c6; --resolved:#37cb8f;
+      --grid:#1e232d; --track:#1c212b;
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.35);
+      --shadow-lg:0 2px 6px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="light"]{
+    color-scheme:light;
+    --bg:#f4f6f8; --surface:#ffffff; --surface-2:#eef1f6; --border:#e3e7ef; --border-strong:#d3d9e4;
+    --ink:#141821; --text:#2b303a; --muted:#67707f; --faint:#98a0ae;
+    --accent:#2946cc; --accent-soft:#e9edff;
+    --good:#1c9d6b; --good-soft:#e2f4ec; --warn:#c0821a; --warn-soft:#f8efda;
+    --serious:#d9722a; --serious-soft:#fbeadd; --crit:#cf3c33; --crit-soft:#fbe7e5;
+    --neutral:#9aa2b1; --neutral-soft:#eef0f4; --created:#5b6b8c; --resolved:#1c9d6b;
+    --grid:#eceff4; --track:#eef1f6;
+    --shadow:0 1px 2px rgba(20,23,29,.04),0 1px 3px rgba(20,23,29,.06);
+    --shadow-lg:0 2px 6px rgba(20,23,29,.05),0 8px 24px rgba(20,23,29,.06);
+  }
+  :root[data-theme="dark"]{
+    color-scheme:dark;
+    --bg:#0c0e12; --surface:#14171e; --surface-2:#1a1e27; --border:#242a35; --border-strong:#333a48;
+    --ink:#eef0f5; --text:#d2d6e0; --muted:#909aab; --faint:#68707f;
+    --accent:#8296f8; --accent-soft:#1b2340;
+    --good:#37cb8f; --good-soft:#123026; --warn:#e0a53f; --warn-soft:#312611;
+    --serious:#ef9256; --serious-soft:#331f11; --crit:#f2695f; --crit-soft:#331714;
+    --neutral:#5c6474; --neutral-soft:#20252f; --created:#93a3c6; --resolved:#37cb8f;
+    --grid:#1e232d; --track:#1c212b;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 1px 3px rgba(0,0,0,.35);
+    --shadow-lg:0 2px 6px rgba(0,0,0,.35),0 10px 30px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  .wrap{max-width:1180px;margin:0 auto;padding:40px 28px 72px}
+  a{color:inherit}
+
+  /* header */
+  header{margin-bottom:26px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 0 10px}
+  h1{font-size:clamp(27px,3.6vw,38px);line-height:1.08;letter-spacing:-.02em;color:var(--ink);margin:0 0 12px;font-weight:680;text-wrap:balance}
+  .sub{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;color:var(--muted);font-size:14px}
+  .sub b{color:var(--text);font-weight:600}
+  .snapshot{font-family:var(--mono);font-size:11.5px;color:var(--faint);margin-top:9px}
+
+  /* verdict banner */
+  .verdict{display:flex;gap:16px;align-items:flex-start;background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--warn);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow);margin-top:22px}
+  .verdict .dotmark{flex:none;width:34px;height:34px;border-radius:9px;background:var(--warn-soft);color:var(--warn);display:grid;place-items:center;font-size:19px}
+  .verdict h2{margin:0 0 4px;font-size:15px;color:var(--ink);font-weight:650;letter-spacing:-.01em}
+  .verdict p{margin:0;font-size:13.5px;color:var(--muted);max-width:78ch}
+  .verdict b{color:var(--text)}
+
+  /* section shell */
+  section{margin-top:32px}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:13px}
+  .sec-title{font-size:12.5px;font-weight:650;color:var(--ink);margin:0;text-transform:uppercase;letter-spacing:.08em}
+  .sec-note{font-family:var(--mono);font-size:11px;color:var(--faint)}
+
+  /* KPI tiles */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+  .kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:15px 16px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:4px;min-width:0;position:relative;overflow:hidden}
+  .kpi::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--tone,var(--neutral))}
+  .kpi .kl{font-size:11.5px;color:var(--muted);font-weight:550}
+  .kpi .kn{font-family:var(--mono);font-size:27px;font-weight:600;color:var(--ink);letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.05}
+  .kpi .kn .u{font-size:13px;color:var(--faint);font-weight:500;margin-left:3px}
+  .kpi .ks{font-size:11px;color:var(--faint)}
+  .kpi .ks b{font-weight:600}
+  .tone-crit{--tone:var(--crit)} .tone-warn{--tone:var(--warn)} .tone-good{--tone:var(--good)} .tone-accent{--tone:var(--accent)}
+  .kn.crit{color:var(--crit)} .kn.good{color:var(--good)} .kn.warn{color:var(--warn)}
+
+  /* panels + grids */
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px 20px}
+  .grid-2{display:grid;grid-template-columns:1.5fr 1fr;gap:20px;align-items:start}
+  .grid-2b{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+
+  .chart-title{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 2px}
+  .chart-sub{font-size:11.5px;color:var(--muted);margin:0 0 14px}
+  figure{margin:0}
+  svg{display:block;width:100%;height:auto;overflow:visible}
+  .legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:12px;font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+  .legend i{width:9px;height:9px;border-radius:2px;display:inline-block;margin-right:6px;vertical-align:baseline}
+  .axis text{font-family:var(--mono);font-size:10px;fill:var(--faint)}
+  .gridline{stroke:var(--grid);stroke-width:1}
+  .lbl-val{font-family:var(--mono);font-size:10.5px;font-variant-numeric:tabular-nums;font-weight:600}
+
+  /* tooltip */
+  .tip{position:fixed;pointer-events:none;z-index:50;background:var(--ink);color:var(--surface);font-family:var(--mono);font-size:11px;line-height:1.5;padding:8px 10px;border-radius:8px;box-shadow:var(--shadow-lg);opacity:0;transition:opacity .1s;white-space:nowrap}
+  .tip.on{opacity:1}
+  .tip .tt{font-weight:700;margin-bottom:3px}
+  .tip .tr{display:flex;justify-content:space-between;gap:14px}
+  .tip .sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px}
+
+  /* stat stack */
+  .statrow{display:flex;gap:10px;margin-bottom:16px}
+  .stat{flex:1;background:var(--surface-2);border-radius:10px;padding:11px 12px}
+  .stat .sl{font-size:10.5px;color:var(--muted);font-weight:550}
+  .stat .sv{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .stat .sv .u{font-size:11px;color:var(--faint);margin-left:2px}
+  .stat .sv.crit{color:var(--crit)} .stat .sv.warn{color:var(--warn)} .stat .sv.good{color:var(--good)}
+
+  /* horizontal bar rows */
+  .hbars{display:flex;flex-direction:column;gap:9px}
+  .hbar{display:grid;grid-template-columns:42px 1fr 58px;gap:10px;align-items:center}
+  .hbar .hk{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent)}
+  .hbar .htk{height:16px;background:var(--track);border-radius:5px;overflow:hidden;display:flex}
+  .hbar .hfill{height:100%;border-radius:5px}
+  .hbar .hv{font-family:var(--mono);font-size:11.5px;color:var(--text);text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .hbar .hv small{color:var(--faint);font-weight:400}
+
+  /* segmented distribution bar */
+  .segbar{height:26px;border-radius:7px;overflow:hidden;display:flex;background:var(--track)}
+  .segbar span{height:100%;display:block;border-right:2px solid var(--surface)}
+  .segbar span:last-child{border-right:none}
+  .seglegend{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:8px 14px;margin-top:13px;font-size:11px}
+  .seglegend div{display:flex;align-items:center;gap:7px;color:var(--muted)}
+  .seglegend i{width:9px;height:9px;border-radius:2px;flex:none}
+  .seglegend b{font-family:var(--mono);color:var(--text);font-variant-numeric:tabular-nums}
+
+  /* watchlist */
+  .watch{display:flex;flex-direction:column}
+  .wl{display:grid;grid-template-columns:66px 1fr auto;gap:10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--border)}
+  .wl:first-child{border-top:none}
+  .wl .wk{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--accent);text-decoration:none}
+  .wl .wk:hover{text-decoration:underline;text-underline-offset:2px}
+  .wl .wm{font-size:12px;color:var(--muted);display:flex;gap:7px;align-items:baseline;min-width:0}
+  .wl .wm .wt{color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .wl .wage{font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+  .pill{display:inline-block;font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.03em;padding:2px 6px;border-radius:5px;text-transform:uppercase}
+  .p-crit{background:var(--crit-soft);color:var(--crit)} .p-serious{background:var(--serious-soft);color:var(--serious)}
+  .p-warn{background:var(--warn-soft);color:var(--warn)} .p-good{background:var(--good-soft);color:var(--good)}
+  .p-neutral{background:var(--neutral-soft);color:var(--muted)}
+  .age-crit{color:var(--crit)} .age-warn{color:var(--warn)} .age-ok{color:var(--muted)}
+
+  /* sprint rows */
+  .sprint{display:grid;grid-template-columns:196px 1fr 150px;gap:20px;align-items:center;padding:16px 20px;border-top:1px solid var(--border)}
+  .sprint:first-child{border-top:none}
+  .sprint .sn{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .sprint .smeta{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:4px;display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+  .pkey{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--accent);background:var(--accent-soft);padding:2px 6px;border-radius:5px}
+  .sbar{height:14px;border-radius:6px;background:var(--track);display:flex;overflow:hidden}
+  .sbar span{height:100%;border-right:2px solid var(--surface)}
+  .sbar span:last-child{border-right:none}
+  .s-done{background:var(--good)} .s-prog{background:var(--warn)} .s-todo{background:var(--neutral)}
+  .sbar-meta{display:flex;justify-content:space-between;margin-top:7px;font-family:var(--mono);font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .elapsed{height:4px;background:var(--track);border-radius:2px;margin-top:8px;overflow:hidden}
+  .elapsed span{display:block;height:100%;background:var(--accent);opacity:.55}
+  .sprint-right{text-align:right}
+  .sprint-right .pts{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+  .sprint-right .ptl{font-size:10.5px;color:var(--faint);margin-top:2px}
+
+  .note{font-size:11.5px;color:var(--muted);line-height:1.55;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+  .note b{color:var(--text)}
+
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--border);font-family:var(--mono);font-size:11px;color:var(--faint);display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:space-between}
+
+  @media(max-width:900px){
+    .kpis{grid-template-columns:repeat(2,1fr)}
+    .grid-2,.grid-2b{grid-template-columns:1fr}
+    .sprint{grid-template-columns:1fr;gap:12px}
+    .sprint-right{text-align:left}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .anim{animation:fade .5s ease both}
+    @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">MakAnalytics · Engineering Operations</p>
+    <h1>Execution health across active delivery</h1>
+    <div class="sub">
+      <span><b>6 active projects</b> — PRC, PP, ES, MA, LEG, REV</span>
+      <span>·</span>
+      <span>Trailing <b>8 weeks</b> → week of __LAST_WEEK_LABEL__</span>
+    </div>
+    <div class="snapshot">Static snapshot · generated __GENERATED_LABEL__ from makanalytics.atlassian.net · flow measured in issue counts (estimation is inconsistent — see notes) · re-run to refresh</div>
+  </header>
+
+  <div class="verdict anim" id="verdict"></div>
+
+  <section aria-label="Headline health metrics">
+    <div class="sec-head"><h2 class="sec-title">Health at a glance</h2><span class="sec-note">trailing 8 weeks</span></div>
+    <div class="kpis" id="kpis"></div>
+  </section>
+
+  <section aria-label="Flow">
+    <div class="sec-head"><h2 class="sec-title">1 · Flow — are we keeping up?</h2><span class="sec-note">created vs resolved / week</span></div>
+    <div class="panel">
+      <div class="grid-2">
+        <figure>
+          <p class="chart-title">Created vs. resolved, by week</p>
+          <p class="chart-sub">When the blue line sits above green, the backlog grows. It has, in 6 of the last 8 weeks.</p>
+          <div id="flowChart"></div>
+          <div class="legend">
+            <span><i style="background:var(--created)"></i>Opened (created)</span>
+            <span><i style="background:var(--resolved)"></i>Shipped (resolved)</span>
+            <span><i style="background:var(--crit);opacity:.5"></i>Net backlog change</span>
+          </div>
+        </figure>
+        <div>
+          <div class="statrow" style="flex-direction:column;gap:10px">
+            <div class="stat"><div class="sl">Net backlog change · 8 wk</div><div class="sv crit" id="netTotal"></div></div>
+            <div class="stat"><div class="sl">Avg opened / week</div><div class="sv" id="avgCreated"></div></div>
+            <div class="stat"><div class="sl">Avg shipped / week</div><div class="sv good" id="avgResolved"></div></div>
+          </div>
+          <p class="chart-title" style="margin-top:4px">Cumulative net backlog</p>
+          <p class="chart-sub">Running total of opened minus shipped over the window.</p>
+          <div id="cumChart"></div>
+        </div>
+      </div>
+      <div class="note"><b>Read:</b> throughput is healthy (~57 issues shipped/week) but intake is higher, so the queue is deepening. The week of Jul 13 alone opened 128 and shipped 78. The current week is partial (Mon–Tue) — shown hollow, don't read its dip as a slowdown.</div>
+    </div>
+  </section>
+
+  <section aria-label="Cycle time">
+    <div class="sec-head"><h2 class="sec-title">2 · Cycle time — how long work takes</h2><span class="sec-note">created → resolved, last 8 wk · n=461</span></div>
+    <div class="panel">
+      <div class="grid-2">
+        <figure>
+          <p class="chart-title">Time to resolve — distribution</p>
+          <p class="chart-sub">Most work clears in a week, but a long tail (82 issues over 30 days) drags the average.</p>
+          <div id="cycleHist"></div>
+        </figure>
+        <div>
+          <div class="statrow">
+            <div class="stat"><div class="sl">Median</div><div class="sv" id="cycMed"></div></div>
+            <div class="stat"><div class="sl">85th pct</div><div class="sv warn" id="cycP85"></div></div>
+            <div class="stat"><div class="sl">Longest</div><div class="sv crit" id="cycMax"></div></div>
+          </div>
+          <p class="chart-title" style="margin-top:4px">Median by project</p>
+          <p class="chart-sub">REV is the outlier — small volume, but work sits far longer.</p>
+          <div class="hbars" id="cycByProj"></div>
+        </div>
+      </div>
+      <div class="note"><b>Note:</b> this is <b>lead time</b> (created → resolved). True in-progress cycle time needs status-transition history — a good reason to start capturing it (see recommendations).</div>
+    </div>
+  </section>
+
+  <section aria-label="Work in progress">
+    <div class="sec-head"><h2 class="sec-title">3 · Work in progress &amp; aging</h2><span class="sec-note">current · 99 items in progress</span></div>
+    <div class="panel">
+      <div class="grid-2b">
+        <div>
+          <p class="chart-title">WIP by age — days since last update</p>
+          <p class="chart-sub">Most WIP is fresh, but 14 items have sat untouched 30+ days.</p>
+          <div class="segbar" id="ageSeg"></div>
+          <div class="seglegend" id="ageLegend"></div>
+          <p class="chart-title" style="margin-top:20px">In progress by project</p>
+          <div class="hbars" id="wipByProj" style="margin-top:10px"></div>
+        </div>
+        <div>
+          <p class="chart-title">Stuck work — oldest in progress</p>
+          <p class="chart-sub">Untouched longest. An epic has been open since February.</p>
+          <div class="watch" id="wipWatch"></div>
+        </div>
+      </div>
+      <div class="note"><b>Why it matters:</b> 99 concurrent items across ~9 active engineers is high WIP. Aging items usually mean work that stalled or a status never advanced — both distort every flow metric until cleaned up.</div>
+    </div>
+  </section>
+
+  <section aria-label="Bug backlog">
+    <div class="sec-head"><h2 class="sec-title">4 · Bug backlog &amp; quality</h2><span class="sec-note">current · 49 open bugs</span></div>
+    <div class="panel">
+      <div class="grid-2b">
+        <div>
+          <p class="chart-title">Open bugs by priority</p>
+          <p class="chart-sub">20 of 49 are High or Highest — a fifth of the backlog is urgent.</p>
+          <div class="segbar" id="priSeg"></div>
+          <div class="seglegend" id="priLegend"></div>
+          <p class="chart-title" style="margin-top:20px">Open bugs by project</p>
+          <div class="hbars" id="bugByProj" style="margin-top:10px"></div>
+        </div>
+        <div>
+          <p class="chart-title">Oldest open bugs</p>
+          <p class="chart-sub">The oldest has been open 246 days — a Highest-priority bug 67 days.</p>
+          <div class="watch" id="bugWatch"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="Sprint health">
+    <div class="sec-head"><h2 class="sec-title">5 · Sprint health</h2><span class="sec-note">active sprints · issue-level completion</span></div>
+    <div class="panel" style="padding:4px 0">
+      <div id="sprints"></div>
+    </div>
+    <div class="note" style="border:none;padding:0 20px 4px">
+      Bars show <b>issue</b> completion (done / in progress / to do); the right column shows committed <b>points</b>. Most sprints opened Jul 21, so low completion is expected on day 0 — <b>PP</b> is the exception: 3 days left, ~4% of issues done, 34 still to do.
+      A true burn-down needs day-by-day history, which this snapshot can begin to accumulate.
+    </div>
+  </section>
+
+  <footer>
+    <span>Source: makanalytics.atlassian.net · window __WINDOW_LABEL__ (America/Chicago)</span>
+    <span>__HIST_COUNT__ issues analyzed · 6 projects</span>
+  </footer>
+</div>
+
+<div class="tip" id="tip"></div>
+
+<script>
+const DATA = __DATA__;
+const SPRINTS = DATA.sprints;
+const JIRA="https://makanalytics.atlassian.net/browse/";
+const PNAMES={PRC:"Priority Roofing",PP:"Priority Proposal",ES:"Eagle Survey",REV:"Concierge Rev Mgmt",LEG:"Legions",MA:"Muenster Automation"};
+const cssv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const el=(t,c,h)=>{const e=document.createElement(t);if(c)e.className=c;if(h!=null)e.innerHTML=h;return e;};
+const wkLabel=s=>{const [y,m,d]=s.split("-").map(Number);return ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][m-1]+" "+d;};
+const SVGNS="http://www.w3.org/2000/svg";
+const mk=(n,a)=>{const e=document.createElementNS(SVGNS,n);for(const k in a)e.setAttribute(k,a[k]);return e;};
+
+// ---- derived flow numbers ----
+const weeks=DATA.weeks;
+const cre=weeks.map(w=>Object.values(DATA.created_weekly[w]).reduce((a,b)=>a+b,0));
+const res=weeks.map(w=>Object.values(DATA.resolved_weekly[w]).reduce((a,b)=>a+b,0));
+const creTot=cre.reduce((a,b)=>a+b,0), resTot=res.reduce((a,b)=>a+b,0);
+const net=creTot-resTot;
+const fullN=weeks.length-1; // exclude partial current week
+const avgC=Math.round(cre.slice(0,fullN).reduce((a,b)=>a+b,0)/fullN);
+const avgR=Math.round(res.slice(0,fullN).reduce((a,b)=>a+b,0)/fullN);
+let cum=[],run=0; for(let i=0;i<weeks.length;i++){run+=cre[i]-res[i];cum.push(run);}
+
+// ---- verdict ----
+document.getElementById("verdict").innerHTML=
+  `<div class="dotmark">◐</div><div><h2>Shipping steadily, but the backlog is outgrowing throughput</h2>
+   <p>The team resolves ~<b>${avgR} issues/week</b>, yet opens ~<b>${avgC}/week</b> — a net <b>+${net} items</b> added to the queue over 8 weeks. Delivery quality signals need attention too: <b>49 open bugs</b> (20 High/Highest) and <b>14 in-progress items</b> stalled 30+ days. Cadence is fine; <b>intake control, aging work, and bug burn-down</b> are the levers.</p></div>`;
+
+// ---- KPIs ----
+const kpis=[
+  {l:"Net backlog · 8wk",n:"+"+net,u:"items",s:"opened − shipped",tone:"crit",nc:"crit"},
+  {l:"Shipped / week",n:avgR,u:"",s:"avg throughput",tone:"good",nc:"good"},
+  {l:"Median cycle time",n:DATA.lead.median,u:"d",s:"p85 "+DATA.lead.p85+"d · max "+DATA.lead.max+"d",tone:"warn",nc:"warn"},
+  {l:"Work in progress",n:DATA.wip_total,u:"",s:(DATA.wip_age["30-60"]+DATA.wip_age["60+"])+" stalled 30d+",tone:"warn",nc:""},
+  {l:"Open bugs",n:DATA.bugs_total,u:"",s:(DATA.bugs_by_priority.High+DATA.bugs_by_priority.Highest)+" High/Highest",tone:"crit",nc:"crit"},
+];
+document.getElementById("kpis").append(...kpis.map(k=>{
+  const d=el("div","kpi tone-"+k.tone);
+  d.append(el("span","kl",k.l));
+  d.append(el("span","kn "+k.nc,`${k.n}${k.u?`<span class="u">${k.u}</span>`:""}`));
+  d.append(el("span","ks",k.s));
+  return d;
+}));
+
+// ---- tooltip helper ----
+const tip=document.getElementById("tip");
+function showTip(html,x,y){tip.innerHTML=html;tip.classList.add("on");const w=tip.offsetWidth,h=tip.offsetHeight;
+  let l=x+14,t=y-h-10; if(l+w>innerWidth-8)l=x-w-14; if(t<8)t=y+16; tip.style.left=l+"px";tip.style.top=t+"px";}
+function hideTip(){tip.classList.remove("on");}
+
+// ---- FLOW line chart ----
+function flowChart(){
+  const W=560,H=250,P={t:14,r:16,b:26,l:30};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const maxY=Math.ceil(Math.max(...cre,...res)/20)*20;
+  const x=i=>P.l+(weeks.length<2?iw/2:i*iw/(weeks.length-1));
+  const y=v=>P.t+ih-(v/maxY)*ih;
+  const svg=mk("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Created versus resolved issues per week"});
+  // gridlines + y labels
+  for(let g=0;g<=maxY;g+=Math.max(20,Math.round(maxY/5/10)*10)){
+    svg.appendChild(mk("line",{class:"gridline",x1:P.l,x2:W-P.r,y1:y(g),y2:y(g)}));
+    const tx=mk("text",{class:"",x:P.l-6,y:y(g)+3,"text-anchor":"end"});tx.setAttribute("font-size","10");tx.setAttribute("font-family","var(--mono)");tx.setAttribute("fill","var(--faint)");tx.textContent=g;svg.appendChild(tx);
+  }
+  // x labels
+  weeks.forEach((w,i)=>{const tx=mk("text",{x:x(i),y:H-8,"text-anchor":"middle"});tx.setAttribute("font-size","10");tx.setAttribute("font-family","var(--mono)");tx.setAttribute("fill","var(--faint)");tx.textContent=wkLabel(w);svg.appendChild(tx);});
+  const line=(arr,color,partialLast)=>{
+    let d=""; arr.forEach((v,i)=>d+=(i?"L":"M")+x(i)+","+y(v));
+    svg.appendChild(mk("path",{d,fill:"none",stroke:color,"stroke-width":2,"stroke-linjoin":"round","stroke-linecap":"round"}));
+    arr.forEach((v,i)=>{
+      const last=i===arr.length-1;
+      const c=mk("circle",{cx:x(i),cy:y(v),r:last?4.5:3,fill:(last&&partialLast)?"var(--surface)":color,stroke:color,"stroke-width":2});
+      svg.appendChild(c);
+    });
+  };
+  line(cre,cssv("--created"),true);
+  line(res,cssv("--resolved"),true);
+  // endpoint value labels
+  const endLbl=(arr,color,dy)=>{const i=arr.length-1;const t=mk("text",{x:x(i)+8,y:y(arr[i])+dy,fill:color});t.setAttribute("class","lbl-val");t.textContent=arr[i];svg.appendChild(t);};
+  // hover overlay
+  weeks.forEach((w,i)=>{
+    const hit=mk("rect",{x:x(i)-(iw/(weeks.length-1))/2,y:P.t,width:iw/(weeks.length-1),height:ih,fill:"transparent"});
+    hit.style.cursor="crosshair";
+    hit.addEventListener("mousemove",e=>{
+      const partial=i===weeks.length-1?' <span style="opacity:.7">(partial)</span>':'';
+      showTip(`<div class="tt">Week of ${wkLabel(w)}${partial}</div>
+        <div class="tr"><span><span class="sw" style="background:${cssv('--created')}"></span>Opened</span><b>${cre[i]}</b></div>
+        <div class="tr"><span><span class="sw" style="background:${cssv('--resolved')}"></span>Shipped</span><b>${res[i]}</b></div>
+        <div class="tr"><span>Net</span><b>${cre[i]-res[i]>=0?'+':''}${cre[i]-res[i]}</b></div>`,e.clientX,e.clientY);
+      vline.setAttribute("x1",x(i));vline.setAttribute("x2",x(i));vline.style.opacity=1;
+    });
+    hit.addEventListener("mouseleave",()=>{hideTip();vline.style.opacity=0;});
+    svg.appendChild(hit);
+  });
+  const vline=mk("line",{y1:P.t,y2:P.t+ih,stroke:"var(--border-strong)","stroke-width":1});vline.style.opacity=0;vline.style.pointerEvents="none";svg.appendChild(vline);
+  document.getElementById("flowChart").appendChild(svg);
+}
+
+// ---- cumulative net (area) ----
+function cumChart(){
+  const W=360,H=120,P={t:12,r:14,b:20,l:26};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b;
+  const maxY=Math.ceil(Math.max(...cum,10)/25)*25, minY=Math.min(0,...cum);
+  const x=i=>P.l+i*iw/(cum.length-1);
+  const y=v=>P.t+ih-((v-minY)/(maxY-minY))*ih;
+  const svg=mk("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Cumulative net backlog"});
+  svg.appendChild(mk("line",{class:"gridline",x1:P.l,x2:W-P.r,y1:y(0),y2:y(0)}));
+  let area="M"+x(0)+","+y(0); cum.forEach((v,i)=>area+="L"+x(i)+","+y(v)); area+="L"+x(cum.length-1)+","+y(0)+"Z";
+  svg.appendChild(mk("path",{d:area,fill:"var(--crit)","fill-opacity":.12}));
+  let d=""; cum.forEach((v,i)=>d+=(i?"L":"M")+x(i)+","+y(v));
+  svg.appendChild(mk("path",{d,fill:"none",stroke:"var(--crit)","stroke-width":2}));
+  const li=cum.length-1;
+  svg.appendChild(mk("circle",{cx:x(li),cy:y(cum[li]),r:4,fill:"var(--crit)"}));
+  const t=mk("text",{x:x(li)-2,y:y(cum[li])-8,"text-anchor":"end",fill:"var(--crit)"});t.setAttribute("class","lbl-val");t.textContent="+"+cum[li];svg.appendChild(t);
+  weeks.forEach((w,i)=>{if(i%2===0){const tx=mk("text",{x:x(i),y:H-6,"text-anchor":"middle"});tx.setAttribute("font-size","9.5");tx.setAttribute("font-family","var(--mono)");tx.setAttribute("fill","var(--faint)");tx.textContent=wkLabel(w);svg.appendChild(tx);}});
+  document.getElementById("cumChart").appendChild(svg);
+}
+
+// ---- flow stat fills ----
+document.getElementById("netTotal").innerHTML=`+${net}<span class="u">items</span>`;
+document.getElementById("avgCreated").innerHTML=`${avgC}<span class="u">/wk</span>`;
+document.getElementById("avgResolved").innerHTML=`${avgR}<span class="u">/wk</span>`;
+
+// ---- cycle histogram ----
+function cycleHist(){
+  const dist=DATA.lead.dist, keys=Object.keys(dist), vals=Object.values(dist);
+  const W=560,H=230,P={t:14,r:14,b:40,l:30};
+  const iw=W-P.l-P.r, ih=H-P.t-P.b, maxY=Math.ceil(Math.max(...vals)/20)*20;
+  const bw=iw/keys.length*0.62, gap=iw/keys.length;
+  const y=v=>P.t+ih-(v/maxY)*ih;
+  const svg=mk("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Cycle time distribution"});
+  for(let g=0;g<=maxY;g+=Math.max(20,Math.round(maxY/5/10)*10)){svg.appendChild(mk("line",{class:"gridline",x1:P.l,x2:W-P.r,y1:y(g),y2:y(g)}));const tx=mk("text",{x:P.l-6,y:y(g)+3,"text-anchor":"end"});tx.setAttribute("font-size","10");tx.setAttribute("font-family","var(--mono)");tx.setAttribute("fill","var(--faint)");tx.textContent=g;svg.appendChild(tx);}
+  const labels=["0–2 days","3–7 days","8–14 days","15–30 days","31+ days"];
+  const tone=["--good","--good","--warn","--serious","--crit"];
+  keys.forEach((k,i)=>{
+    const cx=P.l+gap*i+gap/2, h=(vals[i]/maxY)*ih, yy=y(vals[i]);
+    const r=mk("rect",{x:cx-bw/2,y:yy,width:bw,height:Math.max(2,ih-(yy-P.t)),rx:4,fill:`var(${tone[i]})`});
+    r.style.cursor="pointer";
+    r.addEventListener("mousemove",e=>showTip(`<div class="tt">${labels[i]}</div><div class="tr"><span>Issues</span><b>${vals[i]}</b></div><div class="tr"><span>Share</span><b>${Math.round(vals[i]/DATA.lead.n*100)}%</b></div>`,e.clientX,e.clientY));
+    r.addEventListener("mouseleave",hideTip);
+    svg.appendChild(r);
+    const vt=mk("text",{x:cx,y:yy-6,"text-anchor":"middle",fill:"var(--text)"});vt.setAttribute("class","lbl-val");vt.textContent=vals[i];svg.appendChild(vt);
+    const xt=mk("text",{x:cx,y:H-22,"text-anchor":"middle"});xt.setAttribute("font-size","10");xt.setAttribute("font-family","var(--mono)");xt.setAttribute("fill","var(--faint)");xt.textContent=k.replace("-","–");svg.appendChild(xt);
+    const xt2=mk("text",{x:cx,y:H-9,"text-anchor":"middle"});xt2.setAttribute("font-size","9");xt2.setAttribute("font-family","var(--mono)");xt2.setAttribute("fill","var(--faint)");xt2.textContent="days";svg.appendChild(xt2);
+  });
+  document.getElementById("cycleHist").appendChild(svg);
+}
+document.getElementById("cycMed").innerHTML=`${DATA.lead.median}<span class="u">days</span>`;
+document.getElementById("cycP85").innerHTML=`${DATA.lead.p85}<span class="u">days</span>`;
+document.getElementById("cycMax").innerHTML=`${DATA.lead.max}<span class="u">days</span>`;
+
+// ---- horizontal bars generic ----
+function hbars(container,rows,max,colorFn,fmt){
+  const c=document.getElementById(container);
+  rows.forEach(r=>{
+    const row=el("div","hbar");
+    row.append(el("span","hk",r.key));
+    const tk=el("div","htk");
+    const f=el("div","hfill");f.style.width=(r.val/max*100)+"%";f.style.background=colorFn(r);
+    tk.append(f); row.append(tk);
+    row.append(el("span","hv",fmt?fmt(r):r.val));
+    c.append(row);
+  });
+}
+
+// cycle by project
+(()=>{
+  const rows=DATA.projects.map(p=>({key:p,val:DATA.lead_by_project[p].median||0,n:DATA.lead_by_project[p].n})).filter(r=>r.n>0).sort((a,b)=>b.val-a.val);
+  const max=Math.max(...rows.map(r=>r.val));
+  hbars("cycByProj",rows,max,r=>r.val>30?"var(--crit)":r.val>14?"var(--warn)":"var(--good)",r=>`${r.val}<small>d</small>`);
+})();
+
+// wip by project
+(()=>{
+  const rows=DATA.projects.map(p=>({key:p,val:DATA.wip_by_project[p]})).sort((a,b)=>b.val-a.val);
+  const max=Math.max(...rows.map(r=>r.val));
+  hbars("wipByProj",rows,max,()=> "var(--accent)");
+})();
+
+// bug by project
+(()=>{
+  const rows=DATA.projects.map(p=>({key:p,val:DATA.bugs_by_project[p]||0})).filter(r=>r.val>0).sort((a,b)=>b.val-a.val);
+  const max=Math.max(...rows.map(r=>r.val));
+  hbars("bugByProj",rows,max,()=> "var(--crit)");
+})();
+
+// ---- WIP age segmented ----
+(()=>{
+  const a=DATA.wip_age, order=[["<7","Fresh (<7d)","--good"],["7-14","7–14d","--neutral"],["14-30","14–30d","--warn"],["30-60","30–60d","--serious"],["60+","60d+","--crit"]];
+  const tot=DATA.wip_total, seg=document.getElementById("ageSeg"), leg=document.getElementById("ageLegend");
+  order.forEach(([k,lab,col])=>{
+    if(!a[k])return;
+    const s=document.createElement("span");s.style.width=(a[k]/tot*100)+"%";s.style.background=`var(${col})`;
+    s.title=`${lab}: ${a[k]}`;seg.append(s);
+    const d=el("div",null,`<i style="background:var(${col})"></i><span>${lab}</span> <b>${a[k]}</b>`);leg.append(d);
+  });
+})();
+
+// ---- bug priority segmented ----
+(()=>{
+  const p=DATA.bugs_by_priority, order=[["Highest","Highest","--crit"],["High","High","--serious"],["Medium","Medium","--warn"],["Low","Low","--neutral"]];
+  const tot=DATA.bugs_total, seg=document.getElementById("priSeg"), leg=document.getElementById("priLegend");
+  order.forEach(([k,lab,col])=>{
+    if(!p[k])return;
+    const s=document.createElement("span");s.style.width=(p[k]/tot*100)+"%";s.style.background=`var(${col})`;s.title=`${lab}: ${p[k]}`;seg.append(s);
+    leg.append(el("div",null,`<i style="background:var(${col})"></i><span>${lab}</span> <b>${p[k]}</b>`));
+  });
+})();
+
+// ---- watchlists ----
+function ageCls(a){return a>=60?"age-crit":a>=30?"age-warn":"age-ok";}
+(()=>{
+  const c=document.getElementById("wipWatch");
+  DATA.wip_oldest.forEach(o=>{
+    const row=el("div","wl");
+    const a=el("a","wk",o.key);a.href=JIRA+o.key;a.target="_blank";a.rel="noopener";
+    row.append(a);
+    row.append(el("div","wm",`<span class="pill p-neutral">${o.type}</span><span class="wt">${PNAMES[o.proj]||o.proj}</span>`));
+    row.append(el("span","wage "+ageCls(o.age),o.age+"d"));
+    c.append(row);
+  });
+})();
+(()=>{
+  const c=document.getElementById("bugWatch");
+  const pc={Highest:"p-crit",High:"p-serious",Medium:"p-warn",Low:"p-neutral"};
+  DATA.bugs_oldest.forEach(o=>{
+    const row=el("div","wl");
+    const a=el("a","wk",o.key);a.href=JIRA+o.key;a.target="_blank";a.rel="noopener";
+    row.append(a);
+    row.append(el("div","wm",`<span class="pill ${pc[o.pri]||'p-neutral'}">${o.pri}</span><span class="wt">${PNAMES[o.proj]||o.proj}</span>`));
+    row.append(el("span","wage "+ageCls(o.age),o.age+"d"));
+    c.append(row);
+  });
+})();
+
+// ---- sprints ----
+(()=>{
+  const c=document.getElementById("sprints");
+  SPRINTS.forEach(s=>{
+    const tot=s.done+s.prog+s.todo, pct=n=>tot?(n/tot*100).toFixed(1)+"%":"0%";
+    const donePctIssues=tot?Math.round(s.done/tot*100):0;
+    const elapsed=s.len-s.daysLeft;
+    const risk=(s.daysLeft<=3 && donePctIssues<40);
+    const row=el("div","sprint");
+    const left=el("div");
+    left.append(el("div","sn",s.name));
+    const meta=el("div","smeta");
+    meta.append(el("span","pkey",s.key));
+    meta.append(el("span",null,s.window));
+    meta.append(el("span",null,`· day ${elapsed} of ${s.len}`));
+    if(risk)meta.append(el("span","pill p-crit","at risk"));
+    else if(elapsed<=1)meta.append(el("span","pill p-neutral","just started"));
+    left.append(meta);
+    const mid=el("div");
+    const bar=el("div","sbar");
+    bar.innerHTML=`<span class="s-done" style="width:${pct(s.done)}"></span><span class="s-prog" style="width:${pct(s.prog)}"></span><span class="s-todo" style="width:${pct(s.todo)}"></span>`;
+    mid.append(bar);
+    const bm=el("div","sbar-meta");
+    bm.innerHTML=`<span>${s.done} done · ${s.prog} in progress · ${s.todo} to do</span><span>${donePctIssues}% of issues</span>`;
+    mid.append(bm);
+    const elap=el("div","elapsed");elap.innerHTML=`<span style="width:${Math.round(elapsed/s.len*100)}%"></span>`;
+    mid.append(elap);
+    const right=el("div","sprint-right");
+    right.append(el("div","pts",s.committed+" pts"));
+    right.append(el("div","ptl",`${s.donePts} pts done · ${s.daysLeft}d left`));
+    row.append(left,mid,right);
+    c.append(row);
+  });
+})();
+
+flowChart(); cumChart(); cycleHist();
+</script>
