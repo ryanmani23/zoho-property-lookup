@@ -5,7 +5,7 @@ SUSPECT means RingCX lost contact with the agent's session: the softphone/WebRTC
 connection dropped (Wi-Fi blip, VPN reconnect, laptop sleep, browser tab killed).
 The fix has been for an admin to open Analytics → Real-time dashboard and click **Logout**.
 
-This Google Apps Script does the same thing automatically, every minute:
+This Google Apps Script does the same thing automatically, every 5 minutes:
 
 1. `GET /voice/api/v1/admin/accounts/51060001/realTimeData/agent`: live state of every logged-in agent
 2. Any agent with `agentState = SUSPECT` for ≥ `SUSPECT_SECONDS` →
@@ -39,7 +39,7 @@ Safeguards:
    `COOLDOWN_SECONDS` (300), `EXCLUDE_AGENT_IDS`, `RINGCX_ACCOUNT_ID` (51060001).
 4. In the editor, select `testConnection` → **Run**. Approve the permissions prompt
    (external requests, email, triggers). The execution log should list every logged-in agent and their state.
-5. Select `installTrigger` → **Run**. This creates the every-minute trigger.
+5. Select `installTrigger` → **Run**. This creates the every-5-minutes trigger.
 6. Leave it in dry run for a few days. When a `[DRY RUN]` email shows up for a real
    SUSPECT case, check that it matches what Tom reports, then set `DRY_RUN` to `false`.
 

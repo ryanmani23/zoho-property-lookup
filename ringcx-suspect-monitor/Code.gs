@@ -1,7 +1,7 @@
 /**
  * RingCX SUSPECT-state auto-logout monitor (Legions United Funding).
  *
- * Runs on a 1-minute Apps Script time trigger. Each run:
+ * Runs on a 5-minute Apps Script time trigger. Each run:
  *   1. Pulls live agent states from the RingCX Real-Time Supervisor View API.
  *   2. Finds agents stuck in SUSPECT longer than the threshold.
  *   3. Logs them out (same as "Logout" in the Analytics real-time dashboard).
@@ -197,12 +197,12 @@ function splitList_(s) {
 
 // ---------- One-time setup helpers (run manually from the editor) ----------
 
-/** Creates the every-minute trigger. Run once. */
+/** Creates the every-5-minutes trigger. Run once. */
 function installTrigger() {
   ScriptApp.getProjectTriggers().forEach(function (t) {
     if (t.getHandlerFunction() === 'checkSuspectAgents') ScriptApp.deleteTrigger(t);
   });
-  ScriptApp.newTrigger('checkSuspectAgents').timeBased().everyMinutes(1).create();
+  ScriptApp.newTrigger('checkSuspectAgents').timeBased().everyMinutes(5).create();
 }
 
 /** Read-only connectivity check: logs every logged-in agent and their state. */
