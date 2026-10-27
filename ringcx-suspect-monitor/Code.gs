@@ -55,12 +55,13 @@ function checkSuspectAgents() {
       if (!dryRun) {
         try {
           logoutAgent_(a.agent.agentGroupId, a.agent.agentId);
-          recordLogout_(a.agent.agentId);
         } catch (e) {
           r.ok = false;
           r.error = String(e);
         }
       }
+      // Cooldown applies in dry run and on failures too, so one stuck agent can't trigger an email every minute.
+      recordLogout_(a.agent.agentId);
       console.log(JSON.stringify({ agentId: a.agent.agentId, name: fullName_(a.agent), reason: a.reason, dryRun: dryRun, ok: r.ok, error: r.error }));
       return r;
     });
